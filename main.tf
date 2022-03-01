@@ -183,23 +183,31 @@ resource "aws_lb_listener" "front_end" {
 
 # Create AWS Launch Configuration
 resource "aws_launch_configuration" "as_conf" {
-  image_id      = "ami-0472b5bc6ba28bbfb"
+  image_id      = "ami-07a20ca7b3e03bb19"
   instance_type = "t2.micro"
 }
 
 
 # Create ASG
-resource "aws_autoscaling_group" "WebApp_ASG" {
-  desired_capacity   = 1
-  max_size           = 1
-  min_size           = 1
+resource "aws_autoscaling_group" "WebApp_ASG2" {
+  desired_capacity   = 2
+  max_size           = 2
+  min_size           = 2
   health_check_type  = "ELB"
   launch_configuration = aws_launch_configuration.as_conf.name
   vpc_zone_identifier  = [aws_subnet.public_az1.id, aws_subnet.public_az2.id]
   target_group_arns = ["arn:aws:elasticloadbalancing:ap-southeast-1:264162553877:targetgroup/WebApp-ASG-lb-tg/5220b591d143e7cb"]
     tag {
     key                 = "Name"
-    value               = "WebApp-ASG"
+    value               = "WebApp-ASG2"
     propagate_at_launch = true
+  }
+
+    instance_refresh {
+    strategy = "Rolling"
+    preferences {
+      min_healthy_percentage = 50
+    }
+    triggers = ["tag"]
   }
 }
