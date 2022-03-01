@@ -181,25 +181,50 @@ resource "aws_lb_listener" "front_end" {
  }
 }
 
-# Create AWS Launch Configuration
-resource "aws_launch_configuration" "as_conf" {
-  image_id      = "ami-07a20ca7b3e03bb19"
+# Create AWS Launch Template
+resource "aws_launch_template" "foo" {
+  name = "ASG-LT"
+
+  image_id = "ami-0472b5bc6ba28bbfb"
+
+  instance_initiated_shutdown_behavior = "terminate"
+
+
   instance_type = "t2.micro"
+
+
+  placement {
+    availability_zone = "ap-southeast-1a"
+  }
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "test"
+    }
+  }
+
 }
 
 
 # Create ASG
-resource "aws_autoscaling_group" "WebApp_ASG2" {
-  desired_capacity   = 2
-  max_size           = 2
-  min_size           = 2
+resource "aws_autoscaling_group" "WebApp_ASG" {
+  desired_capacity   = 1
+  max_size           = 1
+  min_size           = 1
   health_check_type  = "ELB"
-  launch_configuration = aws_launch_configuration.as_conf.name
   vpc_zone_identifier  = [aws_subnet.public_az1.id, aws_subnet.public_az2.id]
   target_group_arns = ["arn:aws:elasticloadbalancing:ap-southeast-1:264162553877:targetgroup/WebApp-ASG-lb-tg/5220b591d143e7cb"]
+
+  launch_template {
+    id      = aws_launch_template.foo.id
+    version = aws_launch_template.foo.latest_version
+  }
+
     tag {
     key                 = "Name"
-    value               = "WebApp-ASG2"
+    value               = "WebApp-ASG"
     propagate_at_launch = true
   }
 
